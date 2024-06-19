@@ -1,48 +1,47 @@
+//Author: Small Hedge
+//Published: 19/06/2024
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 
-[RequireComponent(typeof(CinemachineImpulseSource)), RequireComponent(typeof(CinemachineImpulseListener))]
+[RequireComponent(typeof(CinemachineVirtualCamera), typeof(CinemachineImpulseSource), typeof(CinemachineImpulseListener))]
 public class CameraShake : MonoBehaviour
 {
-    [SerializeField, NoiseSettingsProperty] public NoiseSettings defaultShake;
+    [NoiseSettingsProperty, SerializeField] private NoiseSettings defaultShake;
     [SerializeField] private float globalForce = 1;
 
     private CinemachineImpulseListener listener;
     private CinemachineImpulseSource source;
-    private static CameraShake instance;
+    public static CameraShake instance;
 
-    private void Awake()
-    {
-        instance = this;
-    }
-
-    private void Start()
+    void Start()
     {
         listener = GetComponent<CinemachineImpulseListener>();
         source = GetComponent<CinemachineImpulseSource>();
-        source.m_DefaultVelocity = Vector3.back;
+        instance = this;
     }
 
-    public static void Shake(CameraShakeProfile prof)
+    public void Shake(CameraShakeSO SO)
     {
-        Shake(prof.duration, prof.amplitude, prof.frequency, prof.shakeType, prof.impulseShape);
+        Shake(SO.duration, SO.amplitude, SO.frequency, SO.shakeType, SO.impulseShape);
     }
 
-    public static void Shake(float duration = 1, float amplitude = 1, float frequency = 1, NoiseSettings shakeType = null, AnimationCurve impulseShape = null)
+    public void Shake(float duration = 1, float amplitude = 1, float frequency = 1, NoiseSettings shakeType = null, AnimationCurve impulseShape = null)
     {
-        instance.listener.m_ReactionSettings.m_AmplitudeGain = amplitude;
-        instance.listener.m_ReactionSettings.m_FrequencyGain = frequency;
-        instance.listener.m_ReactionSettings.m_Duration = 0;
-        if (shakeType) instance.listener.m_ReactionSettings.m_SecondaryNoise = shakeType;
-        else instance.listener.m_ReactionSettings.m_SecondaryNoise = instance.defaultShake;
+        listener.m_ReactionSettings.m_AmplitudeGain = amplitude;
+        listener.m_ReactionSettings.m_FrequencyGain = frequency;
+        listener.m_ReactionSettings.m_Duration = 0;
+        if (shakeType) listener.m_ReactionSettings.m_SecondaryNoise = shakeType;
+        else listener.m_ReactionSettings.m_SecondaryNoise = defaultShake;
 
-        instance.source.m_ImpulseDefinition.m_ImpulseDuration = duration;
-        instance.source.m_ImpulseDefinition.m_ImpulseShape = CinemachineImpulseDefinition.ImpulseShapes.Custom;
-        if (impulseShape != null) instance.source.m_ImpulseDefinition.m_CustomImpulseShape = impulseShape;
-        else instance.source.m_ImpulseDefinition.m_CustomImpulseShape = AnimationCurve.Constant(0, 1, 1);
+        source.m_ImpulseDefinition.m_ImpulseDuration = duration;
+        source.m_ImpulseDefinition.m_ImpulseShape = CinemachineImpulseDefinition.ImpulseShapes.Custom;
+        if (impulseShape != null) source.m_ImpulseDefinition.m_CustomImpulseShape = impulseShape;
+        else source.m_ImpulseDefinition.m_CustomImpulseShape = AnimationCurve.EaseInOut(0, 1, 1, 0);
+        source.m_DefaultVelocity = Random.insideUnitCircle;
 
-        instance.source.GenerateImpulseWithForce(instance.globalForce);
+        source.GenerateImpulseWithForce(globalForce);
     }
 }
