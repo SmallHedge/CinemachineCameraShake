@@ -1,3 +1,6 @@
+//Author: Small Hedge
+//Published: 19/06/2024
+
 using UnityEngine;
 using Cinemachine;
 
